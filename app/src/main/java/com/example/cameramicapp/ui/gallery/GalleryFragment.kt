@@ -1,9 +1,17 @@
 package com.example.cameramicapp.ui.gallery
 
-import kotlinx.coroutines.isActive
+
+import android.app.Activity
+import java.text.SimpleDateFormat
+import java.util.Locale
+import android.content.ContentResolver
 import android.content.Intent
+import java.io.File
+import kotlinx.coroutines.isActive
 import android.media.MediaPlayer
+import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -27,11 +35,14 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
 import java.util.concurrent.TimeUnit
 import android.util.Log
+import android.webkit.MimeTypeMap
+import java.io.FileOutputStream
+import java.util.Date
 
 class GalleryFragment : Fragment() {
+    private val PICK_MEDIA_REQUEST = 100
     private var _binding: FragmentGalleryBinding? = null
     private val binding get() = _binding!!
 
@@ -62,6 +73,138 @@ class GalleryFragment : Fragment() {
         setupTabs()
         setupDetailView()
         observeViewModel()
+        setupImportButton()
+    }
+
+    private fun setupImportButton() {
+        binding.importButton.setOnClickListener {
+            showImportOptions()
+        }
+    }
+
+    // Metodo para mostrar el diálogo de opciones de importación
+    private fun showImportOptions() {
+        val options = arrayOf("Importar imagen", "Importar audio")
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Importar contenido")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> openMediaPicker("image/*")
+                    1 -> openMediaPicker("audio/*")
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    // Metodo para abrir el selector de archivos
+    private fun openMediaPicker(mimeType: String) {
+        val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+            type = mimeType
+            addCategory(Intent.CATEGORY_OPENABLE)
+        }
+        startActivityForResult(Intent.createChooser(intent, "Seleccionar archivo"), PICK_MEDIA_REQUEST)
+    }
+
+    // Sobrescribir onActivityResult para manejar la selección
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == PICK_MEDIA_REQUEST && resultCode == Activity.RESULT_OK) {
+            data?.data?.let { uri ->
+                importMedia(uri)
+            }
+        }
+    }
+
+    // Metodo para importar el archivo seleccionado
+    private fun importMedia(uri: Uri) {
+        lifecycleScope.launch {
+            try {
+                // Determinar el tipo de medio (imagen o audio)
+                val contentResolver = requireContext().contentResolver
+                val mimeType = contentResolver.getType(uri) ?: ""
+                val isImage = mimeType.startsWith("image/")
+                val isAudio = mimeType.startsWith("audio/")
+
+                if (!(isImage || isAudio)) {
+                    Toast.makeText(requireContext(), "Formato no soportado", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+
+                // Obtener el nombre del archivo
+                val fileName = getFileName(contentResolver, uri)
+
+                // Copiar el archivo a la carpeta de la aplicación
+                val mediaType = if (isImage) MediaType.PHOTO else MediaType.AUDIO
+                val targetDir = if (isImage) {
+                    File(requireContext().externalMediaDirs.first(), "CameraMicApp")
+                } else {
+                    File(requireContext().externalMediaDirs.first(), "CameraMicApp/Audio")
+                }
+
+                targetDir.mkdirs()
+
+                val targetFile = File(targetDir, fileName)
+                copyUriToFile(uri, targetFile)
+
+                // Crear y guardar el MediaItem
+                val mediaItem = MediaItem(
+                    uri = Uri.fromFile(targetFile),
+                    filename = fileName,
+                    type = mediaType,
+                    creationDate = Date()
+                )
+
+                viewModel.importItem(mediaItem)
+
+                Toast.makeText(requireContext(), "Archivo importado correctamente", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(requireContext(), "Error al importar: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    // Metodo para obtener el nombre del archivo
+    private fun getFileName(contentResolver: ContentResolver, uri: Uri): String {
+        var fileName = "imported_file"
+
+        // Intentar obtener el nombre del archivo desde el ContentResolver
+        contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+            if (cursor.moveToFirst()) {
+                val displayNameIndex = cursor.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME)
+                if (displayNameIndex != -1) {
+                    fileName = cursor.getString(displayNameIndex)
+                }
+            }
+        }
+
+        // Generar un nombre si no se pudo obtener
+        if (fileName == "imported_file") {
+            val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+            val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(contentResolver.getType(uri)) ?: ""
+            fileName = "IMPORTED_${timestamp}.${extension}"
+        }
+
+        return fileName
+    }
+
+    // Metodo para copiar el contenido de un Uri a un archivo
+    private suspend fun copyUriToFile(uri: Uri, destFile: File) {
+        withContext(Dispatchers.IO) {
+            requireContext().contentResolver.openInputStream(uri)?.use { input ->
+                FileOutputStream(destFile).use { output ->
+                    val buffer = ByteArray(4 * 1024) // 4k buffer
+                    var read: Int
+                    while (input.read(buffer).also { read = it } != -1) {
+                        output.write(buffer, 0, read)
+                    }
+                    output.flush()
+                }
+            }
+        }
     }
 
     private fun setupRecyclerView() {
@@ -183,7 +326,7 @@ class GalleryFragment : Fragment() {
 
     private suspend fun showDetailView(item: MediaItem) {
         withContext(Dispatchers.Main) {
-            // Asegurar que el reproductor anterior esté liberado
+            // Asegurar que el reproductor anterior este liberado
             releaseMediaPlayer()
 
             when (item.type) {

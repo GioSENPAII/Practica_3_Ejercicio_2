@@ -92,4 +92,12 @@ class GalleryViewModel(application: Application) : AndroidViewModel(application)
             }
         }
     }
+
+    fun importItem(mediaItem: MediaItem) {
+        viewModelScope.launch {
+            repository.saveMediaItem(mediaItem)
+            // Recargar los elementos según la pestaña activa
+            loadAllMedia()
+        }
+    }
 }
