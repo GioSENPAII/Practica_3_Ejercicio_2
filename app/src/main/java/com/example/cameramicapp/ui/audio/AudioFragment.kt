@@ -29,14 +29,14 @@ class AudioFragment : Fragment() {
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         val allGranted = permissions.entries.all { it.value }
-        if (!allGranted) {
+        if (allGranted) {
+            // Los permisos fueron concedidos
             Toast.makeText(
                 requireContext(),
-                "Los permisos de micrófono son necesarios para esta función",
-                Toast.LENGTH_LONG
+                "Permisos concedidos. Ya puedes usar el micrófono.",
+                Toast.LENGTH_SHORT
             ).show()
-        }
-        else {
+        } else {
             Toast.makeText(
                 requireContext(),
                 "Los permisos de micrófono son necesarios para esta función",

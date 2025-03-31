@@ -54,6 +54,11 @@ class CameraFragment : Fragment() {
         val allGranted = permissions.entries.all { it.value }
         if (allGranted) {
             startCamera()
+            Toast.makeText(
+                requireContext(),
+                "Permisos concedidos. Ya puedes usar la cámara.",
+                Toast.LENGTH_SHORT
+            ).show()
         } else {
             Toast.makeText(
                 requireContext(),
