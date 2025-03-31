@@ -1,5 +1,6 @@
 package com.example.cameramicapp.ui.gallery
 
+import kotlinx.coroutines.isActive
 import android.content.Intent
 import android.media.MediaPlayer
 import android.os.Bundle
@@ -13,6 +14,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import com.bumptech.glide.Glide
 import com.example.cameramicapp.R
@@ -24,6 +26,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.concurrent.TimeUnit
 
@@ -36,6 +39,7 @@ class GalleryFragment : Fragment() {
 
     private var mediaPlayer: MediaPlayer? = null
     private var updateSeekbarJob: Job? = null
+    private var detailViewVisible = false
 
     private val categories = listOf("Default", "Trabajo", "Personal", "Vacaciones", "Otros")
 
@@ -89,13 +93,17 @@ class GalleryFragment : Fragment() {
     private fun setupDetailView() {
         // Configurar cierre de vista detalle
         binding.closeDetailButton.setOnClickListener {
-            hideDetailView()
+            lifecycleScope.launch {
+                hideDetailView()
+            }
         }
 
         binding.mediaDetailContainer.setOnClickListener {
             // Solo cerrar si se hace clic fuera de los controles
             if (it == binding.mediaDetailContainer) {
-                hideDetailView()
+                lifecycleScope.launch {
+                    hideDetailView()
+                }
             }
         }
 
@@ -160,48 +168,89 @@ class GalleryFragment : Fragment() {
         }
 
         viewModel.selectedItem.observe(viewLifecycleOwner) { item ->
-            if (item != null) {
-                showDetailView(item)
-            } else {
-                hideDetailView()
+            if (item != null && !detailViewVisible) {
+                lifecycleScope.launch {
+                    showDetailView(item)
+                }
+            } else if (item == null && detailViewVisible) {
+                lifecycleScope.launch {
+                    hideDetailView()
+                }
             }
         }
     }
 
-    private fun showDetailView(item: MediaItem) {
-        releaseMediaPlayer() // Liberar reproductor si estaba en uso
+    private suspend fun showDetailView(item: MediaItem) {
+        withContext(Dispatchers.Main) {
+            // Asegurar que el reproductor anterior esté liberado
+            releaseMediaPlayer()
 
-        when (item.type) {
-            MediaType.PHOTO -> {
-                binding.photoDetailView.visibility = View.VISIBLE
-                binding.audioDetailView.visibility = View.GONE
+            when (item.type) {
+                MediaType.PHOTO -> {
+                    binding.photoDetailView.visibility = View.VISIBLE
+                    binding.audioDetailView.visibility = View.GONE
 
-                // Cargar la imagen con Glide
-                Glide.with(this)
-                    .load(item.uri)
-                    .fitCenter()
-                    .into(binding.photoDetailView)
+                    try {
+                        // Cargar la imagen con Glide
+                        Glide.with(requireContext())
+                            .load(item.uri)
+                            .fitCenter()
+                            .into(binding.photoDetailView)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+                MediaType.AUDIO -> {
+                    binding.photoDetailView.visibility = View.GONE
+                    binding.audioDetailView.visibility = View.VISIBLE
+
+                    binding.audioFileName.text = item.filename
+                    setupAudioPlayer(item)
+                }
             }
-            MediaType.AUDIO -> {
-                binding.photoDetailView.visibility = View.GONE
-                binding.audioDetailView.visibility = View.VISIBLE
 
-                binding.audioFileName.text = item.filename
-                setupAudioPlayer(item)
-            }
+            // Actualizar icono de favorito
+            updateFavoriteIcon(item.favorite)
+
+            // Mostrar el contenedor de detalles
+            binding.mediaDetailContainer.visibility = View.VISIBLE
+            detailViewVisible = true
         }
-
-        // Actualizar icono de favorito
-        updateFavoriteIcon(item.favorite)
-
-        // Mostrar el contenedor de detalles
-        binding.mediaDetailContainer.visibility = View.VISIBLE
     }
 
-    private fun hideDetailView() {
-        releaseMediaPlayer()
-        binding.mediaDetailContainer.visibility = View.GONE
-        viewModel.clearSelection()
+    private suspend fun hideDetailView() {
+        withContext(Dispatchers.Main) {
+            // Cancelar jobs de coroutines
+            updateSeekbarJob?.cancel()
+            updateSeekbarJob = null
+
+            try {
+                // Liberar reproductor si existe
+                mediaPlayer?.apply {
+                    if (isPlaying) {
+                        stop()
+                    }
+                    release()
+                }
+                mediaPlayer = null
+
+                // Limpiar imagen cargada por Glide
+                if (binding.photoDetailView.visibility == View.VISIBLE) {
+                    Glide.with(requireContext()).clear(binding.photoDetailView)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
+            // Ocultar vista de detalle
+            binding.mediaDetailContainer.visibility = View.GONE
+            detailViewVisible = false
+
+            // Notificar al ViewModel
+            if (viewModel.selectedItem.value != null) {
+                viewModel.clearSelection()
+            }
+        }
     }
 
     private fun setupAudioPlayer(item: MediaItem) {
@@ -216,17 +265,17 @@ class GalleryFragment : Fragment() {
 
                 // Mostrar duración total
                 updateAudioTimeDisplay(0, duration.toLong())
-            }
-            // Continuación del código del GalleryFragment.kt
-            // Cambiar icono a play
-            binding.audioPlaybackIcon.setImageResource(android.R.drawable.ic_media_play)
 
-            // Configurar listener para cuando termina la reproducción
-            mediaPlayer?.setOnCompletionListener {
-                binding.audioPlaybackSlider.progress = 0
+                // Cambiar icono a play
                 binding.audioPlaybackIcon.setImageResource(android.R.drawable.ic_media_play)
-                updateAudioTimeDisplay(0, mediaPlayer?.duration?.toLong() ?: 0)
-                updateSeekbarJob?.cancel()
+
+                // Configurar listener para cuando termina la reproducción
+                setOnCompletionListener {
+                    binding.audioPlaybackSlider.progress = 0
+                    binding.audioPlaybackIcon.setImageResource(android.R.drawable.ic_media_play)
+                    updateAudioTimeDisplay(0, mediaPlayer?.duration?.toLong() ?: 0)
+                    updateSeekbarJob?.cancel()
+                }
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -257,15 +306,19 @@ class GalleryFragment : Fragment() {
     private fun startSeekbarUpdate() {
         updateSeekbarJob?.cancel()
         updateSeekbarJob = CoroutineScope(Dispatchers.Main).launch {
-            while (true) {
-                mediaPlayer?.let { player ->
-                    if (player.isPlaying) {
-                        val currentPosition = player.currentPosition
-                        binding.audioPlaybackSlider.progress = currentPosition
-                        updateAudioTimeDisplay(currentPosition.toLong(), player.duration.toLong())
+            try {
+                while (isActive && mediaPlayer != null) {
+                    mediaPlayer?.let { player ->
+                        if (player.isPlaying) {
+                            val currentPosition = player.currentPosition
+                            binding.audioPlaybackSlider.progress = currentPosition
+                            updateAudioTimeDisplay(currentPosition.toLong(), player.duration.toLong())
+                        }
                     }
+                    delay(100) // Actualizar cada 100ms
                 }
-                delay(100) // Actualizar cada 100ms
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }
@@ -317,44 +370,48 @@ class GalleryFragment : Fragment() {
     }
 
     private fun shareMediaItem(item: MediaItem) {
-        try {
-            val file = File(item.uri.path ?: "")
-            if (!file.exists()) {
-                Toast.makeText(
-                    requireContext(),
-                    "No se encontró el archivo para compartir",
-                    Toast.LENGTH_SHORT
-                ).show()
-                return
-            }
-
-            val fileUri = FileProvider.getUriForFile(
-                requireContext(),
-                "${requireContext().packageName}.fileprovider",
-                file
-            )
-
-            val shareIntent = Intent().apply {
-                action = Intent.ACTION_SEND
-                putExtra(Intent.EXTRA_STREAM, fileUri)
-
-                // Establecer tipo según el tipo de medio
-                type = when (item.type) {
-                    MediaType.PHOTO -> "image/*"
-                    MediaType.AUDIO -> "audio/*"
+        lifecycleScope.launch {
+            try {
+                val file = File(item.uri.path ?: "")
+                if (!file.exists()) {
+                    Toast.makeText(
+                        requireContext(),
+                        "No se encontró el archivo para compartir",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return@launch
                 }
 
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
+                // Usar FileProvider para obtener un URI compartible
+                val authority = "${requireContext().packageName}.fileprovider"
+                val fileUri = FileProvider.getUriForFile(
+                    requireContext(),
+                    authority,
+                    file
+                )
 
-            startActivity(Intent.createChooser(shareIntent, "Compartir con..."))
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Toast.makeText(
-                requireContext(),
-                "Error al compartir: ${e.message}",
-                Toast.LENGTH_SHORT
-            ).show()
+                val shareIntent = Intent().apply {
+                    action = Intent.ACTION_SEND
+                    putExtra(Intent.EXTRA_STREAM, fileUri)
+
+                    // Establecer tipo según el tipo de medio
+                    type = when (item.type) {
+                        MediaType.PHOTO -> "image/*"
+                        MediaType.AUDIO -> "audio/*"
+                    }
+
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+
+                startActivity(Intent.createChooser(shareIntent, "Compartir con..."))
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(
+                    requireContext(),
+                    "Error al compartir: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
         }
     }
 
@@ -363,38 +420,76 @@ class GalleryFragment : Fragment() {
             .setTitle("Eliminar medio")
             .setMessage("¿Estás seguro de que deseas eliminar este elemento? Esta acción no se puede deshacer.")
             .setPositiveButton("Eliminar") { _, _ ->
-                viewModel.deleteItem(item)
-                Toast.makeText(
-                    requireContext(),
-                    "Elemento eliminado",
-                    Toast.LENGTH_SHORT
-                ).show()
+                lifecycleScope.launch {
+                    viewModel.deleteItem(item)
+                    Toast.makeText(
+                        requireContext(),
+                        "Elemento eliminado",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
             .setNegativeButton("Cancelar", null)
             .show()
     }
 
-    private fun releaseMediaPlayer() {
-        updateSeekbarJob?.cancel()
-        updateSeekbarJob = null
+    private suspend fun releaseMediaPlayer() {
+        withContext(Dispatchers.IO) {
+            try {
+                updateSeekbarJob?.cancel()
+                updateSeekbarJob = null
 
-        mediaPlayer?.apply {
-            if (isPlaying) {
-                stop()
+                val player = mediaPlayer
+                if (player != null) {
+                    withContext(Dispatchers.Main) {
+                        if (player.isPlaying) {
+                            player.stop()
+                        }
+                        player.reset()
+                        player.release()
+                    }
+                    mediaPlayer = null
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
-            release()
         }
-        mediaPlayer = null
     }
 
     override fun onPause() {
         super.onPause()
-        releaseMediaPlayer()
+        lifecycleScope.launch {
+            releaseMediaPlayer()
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        lifecycleScope.launch {
+            releaseMediaPlayer()
+
+            // Forzar la limpieza de recursos
+            if (detailViewVisible) {
+                hideDetailView()
+            }
+        }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        releaseMediaPlayer()
-        _binding = null
+        lifecycleScope.launch {
+            releaseMediaPlayer()
+
+            // Forzar la limpieza de recursos en el contexto actual
+            try {
+                if (isAdded && context != null) {
+                    Glide.with(requireContext()).clear(binding.photoDetailView)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
+            _binding = null
+        }
     }
 }
