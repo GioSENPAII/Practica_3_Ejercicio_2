@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/cameraFragment"
+        android:icon="@android:drawable/ic_menu_camera"
+        android:title="Cámara" />
+    <item
+        android:id="@+id/audioFragment"
+        android:icon="@android:drawable/ic_btn_speak_now"
+        android:title="Micrófono" />
+    <item
+        android:id="@+id/galleryFragment"
+        android:icon="@android:drawable/ic_menu_gallery"
+        android:title="Galería" />
+    <item
+        android:id="@+id/settingsFragment"
+        android:icon="@android:drawable/ic_menu_preferences"
+        android:title="Ajustes" />
+</menu>

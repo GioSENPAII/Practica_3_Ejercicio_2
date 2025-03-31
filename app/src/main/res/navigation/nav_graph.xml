@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/cameraFragment">
+
+    <fragment
+        android:id="@+id/cameraFragment"
+        android:name="com.example.cameramicapp.ui.camera.CameraFragment"
+        android:label="Cámara"
+        tools:layout="@layout/fragment_camera" />
+
+    <fragment
+        android:id="@+id/audioFragment"
+        android:name="com.example.cameramicapp.ui.audio.AudioFragment"
+        android:label="Micrófono"
+        tools:layout="@layout/fragment_audio" />
+
+    <fragment
+        android:id="@+id/galleryFragment"
+        android:name="com.example.cameramicapp.ui.gallery.GalleryFragment"
+        android:label="Galería"
+        tools:layout="@layout/fragment_gallery" />
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.example.cameramicapp.ui.settings.SettingsFragment"
+        android:label="Ajustes"
+        tools:layout="@layout/fragment_settings" />
+</navigation>

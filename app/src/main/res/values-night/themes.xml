@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tema base IPN (Guinda - Oscuro) -->
+    <style name="Theme.CameraMicApp.IPN" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/ipn_primary_light</item>
+        <item name="colorPrimaryVariant">@color/ipn_primary</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/ipn_primary_light</item>
+        <item name="colorSecondaryVariant">@color/ipn_primary</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="android:colorBackground">@color/ipn_background_dark</item>
+        <item name="colorSurface">@color/ipn_surface_dark</item>
+        <item name="colorOnBackground">@color/white</item>
+        <item name="colorOnSurface">@color/white</item>
+        <item name="android:statusBarColor">@color/black</item>
+    </style>
+
+    <!-- Tema base ESCOM (Azul - Oscuro) -->
+    <style name="Theme.CameraMicApp.ESCOM" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/escom_primary_light</item>
+        <item name="colorPrimaryVariant">@color/escom_primary</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/escom_primary_light</item>
+        <item name="colorSecondaryVariant">@color/escom_primary</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="android:colorBackground">@color/escom_background_dark</item>
+        <item name="colorSurface">@color/escom_surface_dark</item>
+        <item name="colorOnBackground">@color/white</item>
+        <item name="colorOnSurface">@color/white</item>
+        <item name="android:statusBarColor">@color/black</item>
+    </style>
+</resources>
