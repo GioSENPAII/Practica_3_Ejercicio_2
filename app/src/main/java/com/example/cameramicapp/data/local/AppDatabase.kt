@@ -22,29 +22,28 @@ data class MediaItemEntity(
 @Dao
 interface MediaItemDao {
     @Query("SELECT * FROM media_items ORDER BY creationDate DESC")
-    suspend fun getAllMediaItems(): List<MediaItemEntity>
+    fun getAllMediaItems(): List<MediaItemEntity>
 
     @Query("SELECT * FROM media_items WHERE typeString = :type ORDER BY creationDate DESC")
-    suspend fun getMediaItemsByType(type: String): List<MediaItemEntity>
+    fun getMediaItemsByType(type: String): List<MediaItemEntity>
 
     @Query("SELECT * FROM media_items WHERE favorite = 1 ORDER BY creationDate DESC")
-    suspend fun getFavoriteMediaItems(): List<MediaItemEntity>
+    fun getFavoriteMediaItems(): List<MediaItemEntity>
 
     @Query("SELECT * FROM media_items WHERE category = :category ORDER BY creationDate DESC")
-    suspend fun getMediaItemsByCategory(category: String): List<MediaItemEntity>
+    fun getMediaItemsByCategory(category: String): List<MediaItemEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertMediaItem(mediaItem: MediaItemEntity): Long
+    fun insertMediaItem(mediaItem: MediaItemEntity): Long
 
     @Update
-    suspend fun updateMediaItem(mediaItem: MediaItemEntity)
+    fun updateMediaItem(mediaItem: MediaItemEntity)
 
     @Delete
-    suspend fun deleteMediaItem(mediaItem: MediaItemEntity)
+    fun deleteMediaItem(mediaItem: MediaItemEntity)
 }
 
-@Database(entities = [MediaItemEntity::class], version = 1)
-@TypeConverters(Converters::class)
+@Database(entities = [MediaItemEntity::class], version = 1, exportSchema = false)@TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun mediaItemDao(): MediaItemDao
 

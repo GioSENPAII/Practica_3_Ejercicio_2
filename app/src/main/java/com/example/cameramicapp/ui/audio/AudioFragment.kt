@@ -36,6 +36,13 @@ class AudioFragment : Fragment() {
                 Toast.LENGTH_LONG
             ).show()
         }
+        else {
+            Toast.makeText(
+                requireContext(),
+                "Los permisos de micrófono son necesarios para esta función",
+                Toast.LENGTH_LONG
+            ).show()
+        }
     }
 
     override fun onCreateView(
@@ -52,13 +59,13 @@ class AudioFragment : Fragment() {
 
         viewModel = ViewModelProvider(this).get(AudioViewModel::class.java)
 
-        // Solicitar permisos si es necesario
+        setupUI()
+        observeViewModel()
+
+        // Solicitar permisos al inicio
         if (!allPermissionsGranted()) {
             requestAudioPermissions()
         }
-
-        setupUI()
-        observeViewModel()
     }
 
     private fun setupUI() {
