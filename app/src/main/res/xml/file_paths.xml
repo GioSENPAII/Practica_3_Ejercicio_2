@@ -15,4 +15,8 @@
     <files-path
         name="files"
         path="." />
+    <!-- Agrega esta línea específicamente para la ruta donde guardas tus imágenes -->
+    <external-path
+        name="media"
+        path="Android/media/com.example.cameramicapp/" />
 </paths>

@@ -29,6 +29,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.concurrent.TimeUnit
+import android.util.Log
 
 class GalleryFragment : Fragment() {
     private var _binding: FragmentGalleryBinding? = null
@@ -376,19 +377,36 @@ class GalleryFragment : Fragment() {
                 if (!file.exists()) {
                     Toast.makeText(
                         requireContext(),
-                        "No se encontró el archivo para compartir",
+                        "No se encontró el archivo para compartir: ${file.absolutePath}",
                         Toast.LENGTH_SHORT
                     ).show()
                     return@launch
                 }
 
+                // Log para depuración
+                Log.d("GalleryFragment", "Attempting to share file: ${file.absolutePath}")
+
                 // Usar FileProvider para obtener un URI compartible
                 val authority = "${requireContext().packageName}.fileprovider"
-                val fileUri = FileProvider.getUriForFile(
-                    requireContext(),
-                    authority,
-                    file
-                )
+
+                // Intenta usar ContentUri en lugar de FileProvider si es necesario
+                val fileUri = try {
+                    FileProvider.getUriForFile(
+                        requireContext(),
+                        authority,
+                        file
+                    )
+                } catch (e: IllegalArgumentException) {
+                    Log.e("GalleryFragment", "Error al crear URI con FileProvider: ${e.message}")
+
+                    // Intenta usar el URI original como alternativa
+                    Toast.makeText(
+                        requireContext(),
+                        "Error al compartir: No se puede acceder al archivo",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return@launch
+                }
 
                 val shareIntent = Intent().apply {
                     action = Intent.ACTION_SEND
@@ -406,6 +424,7 @@ class GalleryFragment : Fragment() {
                 startActivity(Intent.createChooser(shareIntent, "Compartir con..."))
             } catch (e: Exception) {
                 e.printStackTrace()
+                Log.e("GalleryFragment", "Error al compartir: ${e.message}", e)
                 Toast.makeText(
                     requireContext(),
                     "Error al compartir: ${e.message}",
