@@ -16,75 +16,75 @@ CameraMicApp es una aplicación Android completa para capturar, gestionar y comp
 
 ### 📷 Captura de fotos
 - Pantalla principal de la cámara con controles visibles:
-  ![Imagen 1](assets/1.png)
+  ![Imagen 1](assets/1.jpeg)
   
 - Ejemplo de foto capturada:
-  ![Imagen 2](assets/2.png)
+  ![Imagen 2](assets/2.jpeg)
   
 
 ### 🎙 Grabación de audio
 - Pantalla de grabación con barra de sensibilidad:
-  ![Imagen 3](assets/3.png)
+  ![Imagen 3](assets/3.jpeg)
   
 - Grabación en progreso (con temporizador):
-  ![Imagen 4](assets/4.png)
+  ![Imagen 4](assets/4.jpeg)
 
 - Lista de grabaciones guardadas:
-  ![Imagen 5](assets/5.png)
+  ![Imagen 5](assets/5.jpeg)
 
 ### 🖼 Visualización de imágenes
 - Vista de galería con miniaturas y audios:
-  ![Imagen 6](assets/6.png)
+  ![Imagen 6](assets/6.jpeg)
   
 - Edición básica de imagen:
-  ![Imagen 7](assets/7.png)
+  ![Imagen 7](assets/7.jpeg)
 
 - Selección de categoría
-  ![Imagen 8](assets/8.png)
+  ![Imagen 8](assets/8.jpeg)
 
 - Opcion de compartir imagén
-  ![Imagen 9](assets/9.png)
+  ![Imagen 9](assets/9.jpeg)
 
   
 ### 🔊 Reproductor de audio
 - Pantalla del reproductor de grabaciones:
-  ![Imagen 10](assets/10.png)
+  ![Imagen 10](assets/10.jpeg)
 
 ### 🎨 Temas personalizables
 - Tema Guinda (IPN):
-  ![Imagen 11](assets/11.png)
+  ![Imagen 11](assets/11.jpeg)
 
 - Tema Azul (ESCOM):
-  ![Imagen 12](assets/12.png)
+  ![Imagen 12](assets/12.jpeg)
 
 ### 🌗 Ajustes
 - Vista en modo claro:
-  ![Imagen 13](assets/13.png)
+  ![Imagen 13](assets/13.jpeg)
 
 - Vista en modo oscuro:
-  ![Imagen 14](assets/14.png)
+  ![Imagen 14](assets/14.jpeg)
 
 - Limpieza de caché
-  ![Imagen 15](assets/15.png)
+  ![Imagen 15](assets/15.jpeg)
 - Confirmación de limpieza
-  ![Imagen 19](assets/19.png)
+  ![Imagen 19](assets/19.jpeg)
 
 ### ⬆️⬇️ Importar contenido
 - Opciones de importación:
-  ![Imagen 16](assets/16.png)
+  ![Imagen 16](assets/16.jpeg)
 
 - Pantalla de importacion de imágenes
-  ![Imagen 17](assets/17.png)
+  ![Imagen 17](assets/17.jpeg)
 
 - Pantalla de importacion de audio
-  ![Imagen 18](assets/18.png)
+  ![Imagen 18](assets/18.jpeg)
 
 ### 🔐 Permisos y configuraciones iniciales
 - Solicitud de permisos (cámara, micrófono, almacenamiento):
-  ![Imagen 20](assets/20.png)
-  ![Imagen 21](assets/21.png)
-  ![Imagen 22](assets/22.png)
-  ![Imagen 23](assets/23.png)
+  ![Imagen 20](assets/20.jpeg)
+  ![Imagen 21](assets/21.jpeg)
+  ![Imagen 22](assets/22.jpeg)
+  ![Imagen 23](assets/23.jpeg)
 
 ## Requisitos
 
@@ -97,4 +97,4 @@ CameraMicApp es una aplicación Android completa para capturar, gestionar y comp
 
 1. Clona este repositorio:
 ```bash
-git clone https://github.com/tu-usuario/CameraMicApp.git](https://github.com/GioSENPAII/Practica_3_Ejercicio_2.git
+git clone https://github.com/GioSENPAII/Practica_3_Ejercicio_2.git
