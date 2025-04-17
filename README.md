@@ -82,7 +82,9 @@ CameraMicApp es una aplicación Android completa para capturar, gestionar y comp
 ### 🔐 Permisos y configuraciones iniciales
 - Solicitud de permisos (cámara, micrófono, almacenamiento):
   ![Imagen 20](assets/20.png)
-
+  ![Imagen 21](assets/21.png)
+  ![Imagen 22](assets/22.png)
+  ![Imagen 23](assets/23.png)
 
 ## Requisitos
 
