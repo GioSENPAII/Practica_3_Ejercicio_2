@@ -26,10 +26,12 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.example.cameramicapp.R
 import com.example.cameramicapp.databinding.FragmentCameraBinding
+import com.example.cameramicapp.sensors.AppSensorManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
@@ -47,6 +49,10 @@ class CameraFragment : Fragment() {
     private lateinit var cameraExecutor: ExecutorService
 
     private var countdownJob: kotlinx.coroutines.Job? = null
+
+    // Sensor manager para detectar proximidad
+    private lateinit var sensorManager: AppSensorManager
+    private var isProximityModeEnabled = false
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -82,6 +88,9 @@ class CameraFragment : Fragment() {
 
         viewModel = ViewModelProvider(this).get(CameraViewModel::class.java)
 
+        // Inicializar sensor manager
+        sensorManager = AppSensorManager(requireContext())
+
         // Inicializar el ejecutor de la cámara
         cameraExecutor = Executors.newSingleThreadExecutor()
 
@@ -94,6 +103,23 @@ class CameraFragment : Fragment() {
 
         setupUI()
         observeViewModel()
+        setupProximitySensor()
+    }
+
+    private fun setupProximitySensor() {
+        // Observar cambios en el sensor de proximidad
+        sensorManager.isNear.observe(viewLifecycleOwner) { isNear ->
+            if (isProximityModeEnabled && isNear) {
+                // Activar modo nocturno automáticamente cuando se detecta proximidad
+                viewModel.setFilter(CameraFilter.VINTAGE)
+                binding.proximityIndicator.visibility = View.VISIBLE
+                binding.proximityIndicator.text = "🌙 Modo nocturno activado"
+            } else if (isProximityModeEnabled) {
+                // Volver al filtro normal cuando no hay proximidad
+                viewModel.setFilter(CameraFilter.NORMAL)
+                binding.proximityIndicator.visibility = View.GONE
+            }
+        }
     }
 
     private fun setupUI() {
@@ -115,6 +141,11 @@ class CameraFragment : Fragment() {
                 FlashMode.OFF -> viewModel.setFlashMode(FlashMode.AUTO)
                 else -> viewModel.setFlashMode(FlashMode.AUTO)
             }
+        }
+
+        // Configurar botón de proximidad
+        binding.proximityButton.setOnClickListener {
+            toggleProximityMode()
         }
 
         // Configurar filtros
@@ -143,6 +174,29 @@ class CameraFragment : Fragment() {
         binding.timerOff.setOnClickListener { viewModel.setTimerDuration(0) }
         binding.timer3s.setOnClickListener { viewModel.setTimerDuration(3) }
         binding.timer10s.setOnClickListener { viewModel.setTimerDuration(10) }
+    }
+
+    private fun toggleProximityMode() {
+        isProximityModeEnabled = !isProximityModeEnabled
+
+        if (isProximityModeEnabled) {
+            sensorManager.startProximityListening()
+            binding.proximityButton.setImageResource(android.R.drawable.ic_dialog_info)
+            Toast.makeText(
+                requireContext(),
+                "Modo proximidad activado: acerca la mano al sensor para activar modo nocturno",
+                Toast.LENGTH_LONG
+            ).show()
+        } else {
+            sensorManager.stopProximityListening()
+            binding.proximityButton.setImageResource(android.R.drawable.ic_menu_help)
+            binding.proximityIndicator.visibility = View.GONE
+            Toast.makeText(
+                requireContext(),
+                "Modo proximidad desactivado",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
     }
 
     private fun observeViewModel() {
@@ -297,9 +351,22 @@ class CameraFragment : Fragment() {
         )
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (isProximityModeEnabled) {
+            sensorManager.startProximityListening()
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        sensorManager.stopProximityListening()
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         countdownJob?.cancel()
+        sensorManager.stopAllSensors()
         cameraExecutor.shutdown()
         _binding = null
     }

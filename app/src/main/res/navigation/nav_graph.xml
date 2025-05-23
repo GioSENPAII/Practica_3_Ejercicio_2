@@ -24,6 +24,12 @@
         tools:layout="@layout/fragment_gallery" />
 
     <fragment
+        android:id="@+id/securityFragment"
+        android:name="com.example.cameramicapp.ui.security.SecurityFragment"
+        android:label="Sensores"
+        tools:layout="@layout/fragment_security" />
+
+    <fragment
         android:id="@+id/settingsFragment"
         android:name="com.example.cameramicapp.ui.settings.SettingsFragment"
         android:label="Ajustes"

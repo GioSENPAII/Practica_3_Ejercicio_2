@@ -38,7 +38,7 @@
         android:layout_marginTop="16dp"
         android:textSize="40sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toTopOf="@+id/recordButton"
+        app:layout_constraintBottom_toTopOf="@+id/timerText"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/microphoneImage"
@@ -55,19 +55,57 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/recordingTimerText"
+        app:layout_constraintBottom_toTopOf="@+id/proximityIndicator"
         tools:text="3" />
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/recordButton"
+    <!-- Indicador de proximidad -->
+    <TextView
+        android:id="@+id/proximityIndicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:padding="8dp"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        android:background="@android:color/holo_orange_light"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/timerText"
+        app:layout_constraintBottom_toTopOf="@+id/recordButtonContainer"
+        tools:text="⏸️ Grabación pausada"
+        tools:visibility="visible" />
+
+    <LinearLayout
+        android:id="@+id/recordButtonContainer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
-        android:contentDescription="Grabar"
-        android:src="@android:drawable/ic_media_play"
+        android:orientation="horizontal"
+        android:gravity="center"
         app:layout_constraintBottom_toTopOf="@+id/audioSettingsCard"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/recordingTimerText" />
+        app:layout_constraintTop_toBottomOf="@+id/proximityIndicator">
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/proximityPauseButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:contentDescription="Pausa por proximidad"
+            android:enabled="false"
+            android:src="@android:drawable/ic_menu_help"
+            app:fabSize="mini" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/recordButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="Grabar"
+            android:src="@android:drawable/ic_media_play" />
+
+    </LinearLayout>
 
     <androidx.cardview.widget.CardView
         android:id="@+id/audioSettingsCard"
@@ -77,7 +115,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/recordButton">
+        app:layout_constraintTop_toBottomOf="@+id/recordButtonContainer">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -149,6 +187,27 @@
                     android:layout_weight="1"
                     android:text="5min" />
             </RadioGroup>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginVertical="16dp"
+                android:background="#EEEEEE" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📡 Función de proximidad"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Activa el botón pequeño junto al de grabar para pausar automáticamente las grabaciones cuando acerques la mano al sensor."
+                android:textSize="12sp"
+                android:textStyle="italic" />
+
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 

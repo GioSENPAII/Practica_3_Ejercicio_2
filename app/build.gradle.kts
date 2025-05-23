@@ -44,6 +44,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation ("androidx.appcompat:appcompat:1.6.1")
     implementation(libs.androidx.material3)
+    implementation("com.google.android.material:material:1.12.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
 
     // Jetpack Compose
@@ -85,6 +86,9 @@ dependencies {
     // Navegación
     implementation("androidx.navigation:navigation-fragment-ktx:2.6.0")
     implementation("androidx.navigation:navigation-ui-ktx:2.6.0")
+
+    // Biométricos para autenticación con huellas dactilares
+    implementation("androidx.biometric:biometric:1.1.0")
 
     // Dependencias de testing
     testImplementation("junit:junit:4.13.2")

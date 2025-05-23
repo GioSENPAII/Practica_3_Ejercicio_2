@@ -32,6 +32,24 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:text="3" />
 
+    <!-- Indicador de proximidad -->
+    <TextView
+        android:id="@+id/proximityIndicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:background="#80000000"
+        android:padding="8dp"
+        android:textColor="@color/white"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/timerText"
+        tools:text="🌙 Modo nocturno activado"
+        tools:visibility="visible" />
+
     <LinearLayout
         android:id="@+id/controlsContainer"
         android:layout_width="match_parent"
@@ -51,6 +69,17 @@
             android:scaleType="fitCenter"
             android:src="@android:drawable/ic_menu_manage"
             android:contentDescription="Flash" />
+
+        <ImageButton
+            android:id="@+id/proximityButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="12dp"
+            android:scaleType="fitCenter"
+            android:src="@android:drawable/ic_menu_help"
+            android:contentDescription="Modo Proximidad" />
 
         <ImageButton
             android:id="@+id/captureButton"

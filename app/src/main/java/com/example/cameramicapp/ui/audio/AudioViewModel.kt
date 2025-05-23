@@ -26,6 +26,7 @@ class AudioViewModel(application: Application) : AndroidViewModel(application) {
     private var recorder: MediaRecorder? = null
     private var currentRecordingFile: File? = null
     private var startTime: Long = 0
+    private var pausedTime: Long = 0
 
     private val _isRecording = MutableLiveData(false)
     val isRecording: LiveData<Boolean> = _isRecording
@@ -38,6 +39,9 @@ class AudioViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _timerDuration = MutableLiveData(0) // 0 = no timer
     val timerDuration: LiveData<Int> = _timerDuration
+
+    private val _isPaused = MutableLiveData(false)
+    val isPaused: LiveData<Boolean> = _isPaused
 
     private var durationTimer: Timer? = null
 
@@ -87,7 +91,9 @@ class AudioViewModel(application: Application) : AndroidViewModel(application) {
                 prepare()
                 start()
                 startTime = System.currentTimeMillis()
+                pausedTime = 0
                 _isRecording.postValue(true)
+                _isPaused.postValue(false)
 
                 // Iniciar timer para mostrar duración
                 startDurationTimer()
@@ -105,6 +111,36 @@ class AudioViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: Exception) {
                 e.printStackTrace()
                 resetRecorder()
+            }
+        }
+    }
+
+    fun pauseRecording() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            try {
+                recorder?.pause()
+                _isPaused.postValue(true)
+                pausedTime = System.currentTimeMillis()
+                durationTimer?.cancel()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun resumeRecording() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            try {
+                recorder?.resume()
+                _isPaused.postValue(false)
+                // Ajustar el tiempo de inicio para compensar el tiempo pausado
+                if (pausedTime > 0) {
+                    val pauseDuration = System.currentTimeMillis() - pausedTime
+                    startTime += pauseDuration
+                }
+                startDurationTimer()
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }
@@ -137,7 +173,9 @@ class AudioViewModel(application: Application) : AndroidViewModel(application) {
     private fun resetRecorder() {
         recorder = null
         _isRecording.postValue(false)
+        _isPaused.postValue(false)
         _recordingDuration.postValue(0)
+        pausedTime = 0
     }
 
     private fun startDurationTimer() {

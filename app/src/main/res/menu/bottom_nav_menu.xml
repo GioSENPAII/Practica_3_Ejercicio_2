@@ -13,6 +13,10 @@
         android:icon="@android:drawable/ic_menu_gallery"
         android:title="Galería" />
     <item
+        android:id="@+id/securityFragment"
+        android:icon="@android:drawable/ic_lock_lock"
+        android:title="Sensores" />
+    <item
         android:id="@+id/settingsFragment"
         android:icon="@android:drawable/ic_menu_preferences"
         android:title="Ajustes" />
